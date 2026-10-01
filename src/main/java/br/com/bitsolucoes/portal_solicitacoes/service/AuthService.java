@@ -2,6 +2,7 @@ package br.com.bitsolucoes.portal_solicitacoes.service;
 
 import br.com.bitsolucoes.portal_solicitacoes.dto.auth.LoginRequestDTO;
 import br.com.bitsolucoes.portal_solicitacoes.dto.auth.LoginResponseDTO;
+import br.com.bitsolucoes.portal_solicitacoes.dto.user.CreateUserDTO;
 import br.com.bitsolucoes.portal_solicitacoes.entity.User;
 import br.com.bitsolucoes.portal_solicitacoes.exception.BusinessException;
 import br.com.bitsolucoes.portal_solicitacoes.repository.UserRepository;
@@ -32,6 +33,18 @@ public class AuthService {
         String token = tokenProvider.buildToken(user.getUsername());
 
         return new LoginResponseDTO(token);
+    }
+
+    public void register(CreateUserDTO dto) {
+        if(userRepository.findByUsername(dto.username()).isPresent()){
+            throw new BusinessException("Esse nome de usuário já está cadastrado.");
+        }
+
+        User user = new User();
+        user.setUsername(dto.username());
+        user.setPassword(passwordEncoder.encode(dto.password()));
+
+        userRepository.save(user);
     }
 
     public void logout(){
