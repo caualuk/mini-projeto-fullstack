@@ -4,8 +4,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -21,12 +19,6 @@ public class TokenProvider {
     private long expirationTime;
 
     // Gerar um token
-    public String generateToken(Authentication authentication){
-        UserDetails user = (UserDetails) authentication.getPrincipal();
-
-        return buildToken(user.getUsername());
-    }
-
     public String buildToken(String username) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + expirationTime);
