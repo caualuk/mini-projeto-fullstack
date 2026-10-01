@@ -8,7 +8,9 @@ import br.com.bitsolucoes.portal_solicitacoes.enums.RequestStatus;
 import br.com.bitsolucoes.portal_solicitacoes.exception.BusinessException;
 import br.com.bitsolucoes.portal_solicitacoes.exception.ResourceNotFoundException;
 import br.com.bitsolucoes.portal_solicitacoes.repository.RequestRepository;
+import br.com.bitsolucoes.portal_solicitacoes.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class RequestService {
 
     private final RequestRepository requestRepository;
+    private final UserRepository userRepository;
 
     public RequestResponseDTO create(CreateRequestDTO dto) {
 
@@ -27,6 +30,9 @@ public class RequestService {
         // Toda solicitação criada deve iniciar como OPEN
 
         Request request = new Request();
+
+        String username = SecurityContextHolder.getContext()
+                        .getAuthentication().getName();
 
         request.setTitle(dto.title());
         request.setDescription(dto.description());
