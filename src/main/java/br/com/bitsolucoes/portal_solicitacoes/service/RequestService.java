@@ -1,9 +1,12 @@
 package br.com.bitsolucoes.portal_solicitacoes.service;
 
+import br.com.bitsolucoes.portal_solicitacoes.dto.dashboard.DashboardResponseDTO;
 import br.com.bitsolucoes.portal_solicitacoes.dto.request.CreateRequestDTO;
 import br.com.bitsolucoes.portal_solicitacoes.dto.request.RequestResponseDTO;
 import br.com.bitsolucoes.portal_solicitacoes.dto.request.UpdateRequestDTO;
 import br.com.bitsolucoes.portal_solicitacoes.entity.Request;
+import br.com.bitsolucoes.portal_solicitacoes.entity.User;
+import br.com.bitsolucoes.portal_solicitacoes.enums.RequestCategory;
 import br.com.bitsolucoes.portal_solicitacoes.enums.RequestStatus;
 import br.com.bitsolucoes.portal_solicitacoes.exception.BusinessException;
 import br.com.bitsolucoes.portal_solicitacoes.exception.ResourceNotFoundException;
@@ -34,11 +37,17 @@ public class RequestService {
         String username = SecurityContextHolder.getContext()
                         .getAuthentication().getName();
 
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Usuário não encontrado.")
+                );
+
         request.setTitle(dto.title());
         request.setDescription(dto.description());
         request.setCategory(dto.category());
         request.setStatus(RequestStatus.OPEN);
         request.setCreatedAt(LocalDateTime.now());
+        request.setUser(user);
 
         // O usuário solicitante deve vir do usuário autenticado
         // e não do DTO enviado pelo front.
@@ -113,6 +122,54 @@ public class RequestService {
                 request.getUser().getUsername(),
                 request.getCreatedAt(),
                 request.getStatus()
+        );
+    }
+
+    public List<RequestResponseDTO> findWithFilters(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            RequestCategory category,
+            RequestStatus status,
+            String title
+    ){
+
+        if(startDate != null && startDate.isAfter(LocalDateTime.now())){
+            throw new BusinessException("A data inicial não pode ser posterior à data atual.");
+        }
+
+       return requestRepository.findAll()
+               .stream()
+               .filter(request -> startDate == null ||
+                       !request.getCreatedAt().isBefore(startDate))
+               .filter(request -> endDate == null ||
+                       !request.getCreatedAt().isAfter(endDate))
+               .filter(request -> category == null ||
+                       request.getCategory() == category)
+               .filter(request -> status == null ||
+                       request.getStatus() == status)
+               .filter(request -> title == null || title.isBlank() ||
+                       request.getTitle().toLowerCase()
+                               .contains(title.toLowerCase()))
+               .map(this::toResponseDTO)
+               .toList();
+    }
+
+    public DashboardResponseDTO getDashboard() {
+
+
+        long totalRequests = requestRepository.count();
+
+        long openRequests = requestRepository.countByStatus(RequestStatus.OPEN);
+
+        long requestsInProgress = requestRepository.countByStatus(RequestStatus.IN_PROGRESS);
+
+        long completedRequests = requestRepository.countByStatus(RequestStatus.COMPLETED);
+
+        return new DashboardResponseDTO(
+                totalRequests,
+                openRequests,
+                requestsInProgress,
+                completedRequests
         );
     }
 }
