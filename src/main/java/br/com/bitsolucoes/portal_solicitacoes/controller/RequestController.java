@@ -55,7 +55,8 @@ public class RequestController {
     }
 
     // Busca o Dashboard
-    @GetMapping ResponseEntity<DashboardResponseDTO> getDashboard() {
+    @GetMapping("/dashboard")
+    ResponseEntity<DashboardResponseDTO> getDashboard() {
         return ResponseEntity.ok(requestService.getDashboard());
     }
 
