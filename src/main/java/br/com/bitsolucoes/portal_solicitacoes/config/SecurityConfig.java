@@ -49,7 +49,7 @@ public class SecurityConfig {
                 )
                 // Exige autênticação em outras rotas, exceto a rota de login.
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
                         .anyRequest().authenticated()
                 )
 
