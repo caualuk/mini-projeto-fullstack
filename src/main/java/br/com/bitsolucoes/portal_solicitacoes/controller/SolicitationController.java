@@ -5,12 +5,16 @@ import br.com.bitsolucoes.portal_solicitacoes.dto.solicitation.CreateSolicitatio
 import br.com.bitsolucoes.portal_solicitacoes.dto.solicitation.RequestSolicitationDTO;
 import br.com.bitsolucoes.portal_solicitacoes.dto.solicitation.UpdateSolicitationDTO;
 import br.com.bitsolucoes.portal_solicitacoes.enums.SolicitationCategory;
-import br.com.bitsolucoes.portal_solicitacoes.enums.RequestStatus;
+import br.com.bitsolucoes.portal_solicitacoes.enums.SolicitationStatus;
 import br.com.bitsolucoes.portal_solicitacoes.service.SolicitationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.web.PageableDefault;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,15 +38,22 @@ public class SolicitationController {
     // GET
     // Busca as solicitações
     @GetMapping
-    public ResponseEntity<List<RequestSolicitationDTO>> findAll(
-            @RequestParam(required = false)LocalDateTime startDate,
-            @RequestParam(required = false)LocalDateTime endDate,
+    public ResponseEntity<Page<RequestSolicitationDTO>> findAll(
+            @RequestParam(required = false) LocalDateTime startDate,
+            @RequestParam(required = false) LocalDateTime endDate,
             @RequestParam(required = false) SolicitationCategory category,
-            @RequestParam(required = false) RequestStatus status,
-            @RequestParam(required = false) String title
-            ) {
+            @RequestParam(required = false) SolicitationStatus status,
+            @RequestParam(required = false) String title,
+            @PageableDefault(
+                    size = 10,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC
+            ) Pageable pageable
+    ) {
         return ResponseEntity.ok(
-                solicitationService.findWithFilters(startDate, endDate, category, status, title)
+                solicitationService.findWithFilters(
+                        startDate, endDate, category, status, title, pageable
+                )
         );
     }
 
@@ -89,7 +100,7 @@ public class SolicitationController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<RequestSolicitationDTO> updateStatus(
             @PathVariable UUID id,
-            @RequestParam RequestStatus status
+            @RequestParam SolicitationStatus status
     ) {
         return ResponseEntity.ok(
                 solicitationService.updateStatus(id, status)

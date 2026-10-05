@@ -1,7 +1,7 @@
 package br.com.bitsolucoes.portal_solicitacoes.entity;
 
 import br.com.bitsolucoes.portal_solicitacoes.enums.SolicitationCategory;
-import br.com.bitsolucoes.portal_solicitacoes.enums.RequestStatus;
+import br.com.bitsolucoes.portal_solicitacoes.enums.SolicitationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,7 +37,7 @@ public class Solicitation {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RequestStatus status;
+    private SolicitationStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

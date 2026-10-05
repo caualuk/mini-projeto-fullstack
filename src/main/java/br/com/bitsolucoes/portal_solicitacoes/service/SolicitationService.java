@@ -7,17 +7,21 @@ import br.com.bitsolucoes.portal_solicitacoes.dto.solicitation.UpdateSolicitatio
 import br.com.bitsolucoes.portal_solicitacoes.entity.Solicitation;
 import br.com.bitsolucoes.portal_solicitacoes.entity.User;
 import br.com.bitsolucoes.portal_solicitacoes.enums.SolicitationCategory;
-import br.com.bitsolucoes.portal_solicitacoes.enums.RequestStatus;
+import br.com.bitsolucoes.portal_solicitacoes.enums.SolicitationStatus;
 import br.com.bitsolucoes.portal_solicitacoes.exception.BusinessException;
 import br.com.bitsolucoes.portal_solicitacoes.exception.ResourceNotFoundException;
+import br.com.bitsolucoes.portal_solicitacoes.mapper.SolicitationMapper;
 import br.com.bitsolucoes.portal_solicitacoes.repository.SolicitationRepository;
 import br.com.bitsolucoes.portal_solicitacoes.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import br.com.bitsolucoes.portal_solicitacoes.repository.specification.SolicitationSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -26,13 +30,14 @@ public class SolicitationService {
 
     private final SolicitationRepository solicitationRepository;
     private final UserRepository userRepository;
+    private final SolicitationMapper solicitationMapper;
 
     public RequestSolicitationDTO create(CreateSolicitationDTO dto) {
 
         // REGRA:
         // Toda solicitação criada deve iniciar como OPEN
 
-        Solicitation solicitation = new Solicitation();
+        Solicitation solicitation = solicitationMapper.toEntity(dto);
 
         String username = SecurityContextHolder.getContext()
                         .getAuthentication().getName();
@@ -42,10 +47,7 @@ public class SolicitationService {
                         new ResourceNotFoundException("Usuário não encontrado.")
                 );
 
-        solicitation.setTitle(dto.title());
-        solicitation.setDescription(dto.description());
-        solicitation.setCategory(dto.category());
-        solicitation.setStatus(RequestStatus.OPEN);
+        solicitation.setStatus(SolicitationStatus.OPEN);
         solicitation.setCreatedAt(LocalDateTime.now());
         solicitation.setUser(user);
 
@@ -54,56 +56,46 @@ public class SolicitationService {
 
         Solicitation savedSolicitation = solicitationRepository.save(solicitation);
 
-        return toResponseDTO(savedSolicitation);
+        return solicitationMapper.toResponse(savedSolicitation);
     }
 
     public RequestSolicitationDTO findById(UUID id){
         Solicitation solicitation = findRequest(id);
 
-        return toResponseDTO(solicitation);
-    }
-
-    public List<RequestSolicitationDTO> findAll() {
-
-        return solicitationRepository.findAll()
-                .stream()
-                .map(this::toResponseDTO)
-                .toList();
+        return solicitationMapper.toResponse(solicitation);
     }
 
     public RequestSolicitationDTO update(UUID id, UpdateSolicitationDTO dto){
         Solicitation solicitation = findRequest(id);
 
-        if(solicitation.getStatus() != RequestStatus.OPEN){
+        if(solicitation.getStatus() != SolicitationStatus.OPEN){
             throw new BusinessException("Apenas solicitações abertas podem ser editadas!");
         }
 
-        solicitation.setTitle(dto.title());
-        solicitation.setDescription(dto.description());
-        solicitation.setCategory(dto.category());
+        solicitationMapper.updateEntity(dto, solicitation);
 
         Solicitation updatedSolicitation = solicitationRepository.save(solicitation);
 
-        return toResponseDTO(updatedSolicitation);
+        return solicitationMapper.toResponse(updatedSolicitation);
     }
 
     public void delete(UUID id) {
         Solicitation solicitation = findRequest(id);
 
-        if(solicitation.getStatus() != RequestStatus.OPEN) {
+        if(solicitation.getStatus() != SolicitationStatus.OPEN) {
             throw new BusinessException("Apenas solicitações abertas podem ser excluídas!");
         }
 
         solicitationRepository.delete(solicitation);
     }
 
-    public RequestSolicitationDTO updateStatus(UUID id, RequestStatus status) {
+    public RequestSolicitationDTO updateStatus(UUID id, SolicitationStatus status) {
         Solicitation solicitation = findRequest(id);
 
         solicitation.setStatus(status);
         Solicitation updatedSolicitation = solicitationRepository.save(solicitation);
 
-        return toResponseDTO(updatedSolicitation);
+        return solicitationMapper.toResponse(updatedSolicitation);
     }
 
     private Solicitation findRequest(UUID id) {
@@ -112,46 +104,54 @@ public class SolicitationService {
                         new ResourceNotFoundException("Solicitação não encontrada."));
     }
 
-    private RequestSolicitationDTO toResponseDTO(Solicitation solicitation) {
-
-        return new RequestSolicitationDTO(
-                solicitation.getId(),
-                solicitation.getTitle(),
-                solicitation.getDescription(),
-                solicitation.getCategory(),
-                solicitation.getUser().getUsername(),
-                solicitation.getCreatedAt(),
-                solicitation.getStatus()
-        );
-    }
-
-    public List<RequestSolicitationDTO> findWithFilters(
+    public Page<RequestSolicitationDTO> findWithFilters(
             LocalDateTime startDate,
             LocalDateTime endDate,
             SolicitationCategory category,
-            RequestStatus status,
-            String title
-    ){
+            SolicitationStatus status,
+            String title,
+            Pageable pageable
+    ) {
 
-        if(startDate != null && startDate.isAfter(LocalDateTime.now())){
-            throw new BusinessException("A data inicial não pode ser posterior à data atual.");
+        Specification<Solicitation> specification = (root, query, criteriaBuilder) ->
+                criteriaBuilder.conjunction();
+
+        if(startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new BusinessException("A data inicial não pode ser posterior à data final.");
         }
 
-       return solicitationRepository.findAll()
-               .stream()
-               .filter(solicitation -> startDate == null ||
-                       !solicitation.getCreatedAt().isBefore(startDate))
-               .filter(solicitation -> endDate == null ||
-                       !solicitation.getCreatedAt().isAfter(endDate))
-               .filter(solicitation -> category == null ||
-                       solicitation.getCategory() == category)
-               .filter(solicitation -> status == null ||
-                       solicitation.getStatus() == status)
-               .filter(solicitation -> title == null || title.isBlank() ||
-                       solicitation.getTitle().toLowerCase()
-                               .contains(title.toLowerCase()))
-               .map(this::toResponseDTO)
-               .toList();
+        if (startDate != null) {
+            specification = specification.and(
+                    SolicitationSpecification.createdAfter(startDate)
+            );
+        }
+
+        if (endDate != null) {
+            specification = specification.and(
+                    SolicitationSpecification.createdBefore(endDate)
+            );
+        }
+
+        if (category != null) {
+            specification = specification.and(
+                    SolicitationSpecification.hasCategory(category)
+            );
+        }
+
+        if (status != null) {
+            specification = specification.and(
+                    SolicitationSpecification.hasStatus(status)
+            );
+        }
+
+        if (title != null && !title.isBlank()) {
+            specification = specification.and(
+                    SolicitationSpecification.titleContains(title)
+            );
+        }
+
+        return solicitationRepository.findAll(specification, pageable)
+                .map(solicitationMapper::toResponse);
     }
 
     public DashboardResponseDTO getDashboard() {
@@ -159,11 +159,11 @@ public class SolicitationService {
 
         long totalRequests = solicitationRepository.count();
 
-        long openRequests = solicitationRepository.countByStatus(RequestStatus.OPEN);
+        long openRequests = solicitationRepository.countByStatus(SolicitationStatus.OPEN);
 
-        long requestsInProgress = solicitationRepository.countByStatus(RequestStatus.IN_PROGRESS);
+        long requestsInProgress = solicitationRepository.countByStatus(SolicitationStatus.IN_PROGRESS);
 
-        long completedRequests = solicitationRepository.countByStatus(RequestStatus.COMPLETED);
+        long completedRequests = solicitationRepository.countByStatus(SolicitationStatus.COMPLETED);
 
         return new DashboardResponseDTO(
                 totalRequests,

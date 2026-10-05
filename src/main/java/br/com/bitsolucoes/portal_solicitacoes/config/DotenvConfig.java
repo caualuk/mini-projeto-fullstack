@@ -1,7 +1,6 @@
 package br.com.bitsolucoes.portal_solicitacoes.config;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import org.springframework.context.annotation.Configuration;
 
 public class DotenvConfig {
 

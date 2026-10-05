@@ -1,6 +1,6 @@
 package br.com.bitsolucoes.portal_solicitacoes.enums;
 
-public enum RequestStatus {
+public enum SolicitationStatus {
     OPEN,
     IN_PROGRESS,
     COMPLETED
