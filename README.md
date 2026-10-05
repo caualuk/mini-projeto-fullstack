@@ -13,7 +13,7 @@ API REST do Portal de Solicitações (Java 25 · Spring Boot 4 · Spring Securit
 
 ## Configuração
 
-Crie o `.env` na **raiz do repositório** a partir de `../.env.example`:
+Defina as variáveis de ambiente na configuração de execução do IntelliJ (*Run → Edit Configurations → Environment variables*) ou no terminal:
 
 | Variável           | Exemplo                                                  |
 |--------------------|----------------------------------------------------------|
@@ -22,7 +22,6 @@ Crie o `.env` na **raiz do repositório** a partir de `../.env.example`:
 | `DB_PASSWORD`      | `postgres`                                               |
 | `JWT_SECRET`       | string com 32+ caracteres                                |
 | `JWT_EXPIRATION`   | `86400000` (opcional, 24 h)                              |
-| `APP_SEED_ENABLED` | `true` (opcional — cria usuários e solicitações de exemplo) |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` (opcional — endereço do frontend) |
 
 ## Comandos
@@ -33,9 +32,6 @@ Crie o `.env` na **raiz do repositório** a partir de `../.env.example`:
 ./mvnw clean package       # gera target/portal-solicitacoes-0.0.1-SNAPSHOT.jar
 ```
 
-## Usuários de demonstração
+## Acesso
 
-| Usuário       | Senha      |
-|---------------|------------|
-| `admin`       | `admin123` |
-| `colaborador` | `123456`   |
+O banco começa vazio. Crie um usuário pela opção **Criar conta** na tela de login.
