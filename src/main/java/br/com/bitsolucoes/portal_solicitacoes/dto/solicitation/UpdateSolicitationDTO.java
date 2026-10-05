@@ -1,10 +1,10 @@
-package br.com.bitsolucoes.portal_solicitacoes.dto.request;
+package br.com.bitsolucoes.portal_solicitacoes.dto.solicitation;
 
-import br.com.bitsolucoes.portal_solicitacoes.enums.RequestCategory;
+import br.com.bitsolucoes.portal_solicitacoes.enums.SolicitationCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record UpdateRequestDTO(
+public record UpdateSolicitationDTO(
 
         @NotBlank(message = "O título é obrigatório")
         String title,
@@ -13,6 +13,6 @@ public record UpdateRequestDTO(
         String description,
 
         @NotNull(message = "A categoria é obrigatória")
-        RequestCategory category
+        SolicitationCategory category
 ) {
 }

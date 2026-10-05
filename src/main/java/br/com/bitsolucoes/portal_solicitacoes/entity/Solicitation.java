@@ -1,6 +1,6 @@
 package br.com.bitsolucoes.portal_solicitacoes.entity;
 
-import br.com.bitsolucoes.portal_solicitacoes.enums.RequestCategory;
+import br.com.bitsolucoes.portal_solicitacoes.enums.SolicitationCategory;
 import br.com.bitsolucoes.portal_solicitacoes.enums.RequestStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,12 +12,12 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "requests")
+@Table(name = "solicitations")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Request {
+public class Solicitation {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -30,7 +30,7 @@ public class Request {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RequestCategory category;
+    private SolicitationCategory category;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

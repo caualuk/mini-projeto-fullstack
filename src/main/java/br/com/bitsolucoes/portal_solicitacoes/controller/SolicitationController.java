@@ -1,12 +1,12 @@
 package br.com.bitsolucoes.portal_solicitacoes.controller;
 
 import br.com.bitsolucoes.portal_solicitacoes.dto.dashboard.DashboardResponseDTO;
-import br.com.bitsolucoes.portal_solicitacoes.dto.request.CreateRequestDTO;
-import br.com.bitsolucoes.portal_solicitacoes.dto.request.RequestResponseDTO;
-import br.com.bitsolucoes.portal_solicitacoes.dto.request.UpdateRequestDTO;
-import br.com.bitsolucoes.portal_solicitacoes.enums.RequestCategory;
+import br.com.bitsolucoes.portal_solicitacoes.dto.solicitation.CreateSolicitationDTO;
+import br.com.bitsolucoes.portal_solicitacoes.dto.solicitation.RequestSolicitationDTO;
+import br.com.bitsolucoes.portal_solicitacoes.dto.solicitation.UpdateSolicitationDTO;
+import br.com.bitsolucoes.portal_solicitacoes.enums.SolicitationCategory;
 import br.com.bitsolucoes.portal_solicitacoes.enums.RequestStatus;
-import br.com.bitsolucoes.portal_solicitacoes.service.RequestService;
+import br.com.bitsolucoes.portal_solicitacoes.service.SolicitationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,45 +19,45 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/v1/requests")
 @AllArgsConstructor
-public class RequestController {
-    private final RequestService requestService;
+public class SolicitationController {
+    private final SolicitationService solicitationService;
 
     // POST
     // Cria a solicitação
     @PostMapping
-    public ResponseEntity<RequestResponseDTO> create(
-            @RequestBody @Valid CreateRequestDTO dto
+    public ResponseEntity<RequestSolicitationDTO> create(
+            @RequestBody @Valid CreateSolicitationDTO dto
     ) {
-        return ResponseEntity.ok(requestService.create(dto));
+        return ResponseEntity.ok(solicitationService.create(dto));
     }
 
     // GET
     // Busca as solicitações
     @GetMapping
-    public ResponseEntity<List<RequestResponseDTO>> findAll(
+    public ResponseEntity<List<RequestSolicitationDTO>> findAll(
             @RequestParam(required = false)LocalDateTime startDate,
             @RequestParam(required = false)LocalDateTime endDate,
-            @RequestParam(required = false) RequestCategory category,
+            @RequestParam(required = false) SolicitationCategory category,
             @RequestParam(required = false) RequestStatus status,
             @RequestParam(required = false) String title
             ) {
         return ResponseEntity.ok(
-                requestService.findWithFilters(startDate, endDate, category, status, title)
+                solicitationService.findWithFilters(startDate, endDate, category, status, title)
         );
     }
 
     // Busca as solicitações por ID
     @GetMapping("/{id}")
-    public ResponseEntity<RequestResponseDTO> findById(
+    public ResponseEntity<RequestSolicitationDTO> findById(
             @PathVariable UUID id
     ) {
-        return ResponseEntity.ok(requestService.findById(id));
+        return ResponseEntity.ok(solicitationService.findById(id));
     }
 
     // Busca o Dashboard
     @GetMapping("/dashboard")
     ResponseEntity<DashboardResponseDTO> getDashboard() {
-        return ResponseEntity.ok(requestService.getDashboard());
+        return ResponseEntity.ok(solicitationService.getDashboard());
     }
 
     // DELETE
@@ -67,7 +67,7 @@ public class RequestController {
     public ResponseEntity<Void> delete(
             @PathVariable UUID id
     ) {
-        requestService.delete(id);
+        solicitationService.delete(id);
 
         return ResponseEntity.noContent().build();
     }
@@ -76,23 +76,23 @@ public class RequestController {
 
     // Atualiza a solicitação
     @PutMapping("/{id}")
-    public ResponseEntity<RequestResponseDTO> update(
+    public ResponseEntity<RequestSolicitationDTO> update(
             @PathVariable UUID id,
-            @RequestBody @Valid UpdateRequestDTO dto
+            @RequestBody @Valid UpdateSolicitationDTO dto
     ) {
         return ResponseEntity.ok(
-                requestService.update(id, dto)
+                solicitationService.update(id, dto)
         );
     }
 
     // Atualiza o status da solicitação
     @PatchMapping("/{id}/status")
-    public ResponseEntity<RequestResponseDTO> updateStatus(
+    public ResponseEntity<RequestSolicitationDTO> updateStatus(
             @PathVariable UUID id,
             @RequestParam RequestStatus status
     ) {
         return ResponseEntity.ok(
-                requestService.updateStatus(id, status)
+                solicitationService.updateStatus(id, status)
         );
     }
 

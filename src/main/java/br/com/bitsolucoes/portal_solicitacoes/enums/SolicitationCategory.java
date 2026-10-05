@@ -1,6 +1,6 @@
 package br.com.bitsolucoes.portal_solicitacoes.enums;
 
-public enum RequestCategory {
+public enum SolicitationCategory {
     IT,
     HR,
     PROCUREMENT,
